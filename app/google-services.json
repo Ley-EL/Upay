@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "921650787725",
+    "project_id": "upay-ef20f",
+    "storage_bucket": "upay-ef20f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:921650787725:android:8b379ebdc331f1160639c4",
+        "android_client_info": {
+          "package_name": "com.example.upay"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "921650787725-3kdn5224teuksm8bdnsdgopvdhn97dd4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBfoCf2oWOatEBWNv00193SDoQAm17Ecx0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "921650787725-3kdn5224teuksm8bdnsdgopvdhn97dd4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
