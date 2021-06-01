@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">Upay</string>
+    <string name="navigation_drawer_open">Open nvigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="fill_in_field">Please fill in this field</string>
+    <string name="add_an_image">You must set one image at least</string>
+    <string name="external_storage_permission_denied">You must give your permission if you want to choose an image</string>
+    <string name="devise">HTG</string>
 </resources>

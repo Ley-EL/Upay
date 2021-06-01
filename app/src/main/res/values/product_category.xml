@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    
+    <array name="product_category">
+
+        <item>Clothes</item>
+        <item>Shoes</item>
+        <item>Top</item>
+        <item>Books</item>
+        <item>Electronics</item>
+        <item>Streaming</item>
+
+    </array>
+    
+</resources>
