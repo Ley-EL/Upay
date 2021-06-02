@@ -6,4 +6,9 @@
     <string name="add_an_image">You must set one image at least</string>
     <string name="external_storage_permission_denied">You must give your permission if you want to choose an image</string>
     <string name="devise">HTG</string>
+    <string name="progress_dialog_register">Account is creating...</string>
+    <string name="fill_in_field_err_msg">Please fill in this field</string>
+    <string name="min_password_length">You should enter at least 6 characters for the password section</string>
+    <string name="password_different">Your password confirmation is different to your password</string>
+    <string name="progress_dialog_login">Logging in...</string>
 </resources>

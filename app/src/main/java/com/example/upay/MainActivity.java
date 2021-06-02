@@ -1,15 +1,15 @@
 package com.example.upay;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -17,6 +17,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -36,13 +37,15 @@ import com.example.upay.Fragments.ShoesFragment;
 import com.example.upay.Fragments.StreamingFragment;
 import com.example.upay.Fragments.TopFragment;
 import com.example.upay.Models.ProductInfos;
-import com.example.upay.UserConnections.LogOut;
+import com.example.upay.UserConnections.LoginActivity;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
@@ -53,23 +56,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private ExtendedFloatingActionButton addProduct;
     private Spinner spinner;
-    private ImageView mainProductImg, firstProductImg, secondProductImg, thirdProductImg, fourthProductImg;
+    private ImageView mainProductImg;
     private TextInputLayout productNameLayout, productDescLayout, productPriceLayout;
     private TextInputEditText productName, productDesc, productPrice;
     private String productNameVal, productDescVal, productPriceVal, productCategory;
-    private int currentImg;
     private ProgressDialog progressDialog;
     private Dialog dialog;
-    private Uri mainPickedImgUri, firstPickedImgUri, secondPickedImgUri, thirdPickedImgUri, fourthPickedImgUri;
+    private Uri mainPickedImgUri;
     private final int EXTERNAL_STORAGE_RC = 1;
     private final int MAIN_GALLERY_RC = 0;
-    private final int FIRST_GALLERY_RC = 1;
-    private final int SECOND_GALLERY_RC = 2;
-    private final int THIRD_GALLERY_RC = 3;
-    private final int FOURTH_GALLERY_RC = 4;
     private DrawerLayout drawer;
     private NavigationView navigationView;
 
+    private FirebaseAuth mAuth;
+    private FirebaseUser currentUser;
     private FirebaseDatabase database;
     private DatabaseReference databaseRef;
     private FirebaseStorage storage;
@@ -109,6 +109,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         progressDialog.setCancelable(false);
 
         // initialize firebase variable
+        mAuth = FirebaseAuth.getInstance();
+        currentUser = mAuth.getCurrentUser();
         database = FirebaseDatabase.getInstance();
         databaseRef = database.getReference().child("Product");
         storage = FirebaseStorage.getInstance();
@@ -128,6 +130,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 ShowDialog();
             }
         });
+
+        UpdateNavHeader();
+    }
+
+    public void UpdateNavHeader() {
+        // get header view
+        View headerView = navigationView.getHeaderView(0);
+
+        // retrieve nav header id
+        TextView navUserName = headerView.findViewById(R.id.user_name);
+        TextView navUserEmail = headerView.findViewById(R.id.user_email);
+
+        // set nav user name text
+        navUserName.setText(currentUser.getDisplayName());
+
+        // set nav user email
+        navUserEmail.setText(currentUser.getEmail());
     }
 
     private void ShowDialog() {
@@ -139,10 +158,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // retrieve all id
         mainProductImg = dialog.findViewById(R.id.main_product_img);
-//        firstProductImg = dialog.findViewById(R.id.first_product_img);
-//        secondProductImg = dialog.findViewById(R.id.second_product_img);
-//        thirdProductImg = dialog.findViewById(R.id.third_product_img);
-//        fourthProductImg = dialog.findViewById(R.id.fourth_product_img);
         productNameLayout = dialog.findViewById(R.id.product_name_layout);
         productDescLayout = dialog.findViewById(R.id.product_desc_layout);
         productPriceLayout = dialog.findViewById(R.id.product_price_layout);
@@ -154,7 +169,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Button addBtn = dialog.findViewById(R.id.add_btn);
 
         // initialize spinner adapter
-        ArrayAdapter spinnerAdapter =  ArrayAdapter.createFromResource(MainActivity.this,
+        ArrayAdapter spinnerAdapter = ArrayAdapter.createFromResource(MainActivity.this,
                 R.array.product_category, android.R.layout.simple_spinner_item);
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(spinnerAdapter);
@@ -174,42 +189,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mainProductImg.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                currentImg = 0;
                 RequestPermission();
             }
         });
-
-//        firstProductImg.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                currentImg = 1;
-//                RequestPermission();
-//            }
-//        });
-//
-//        secondProductImg.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                currentImg = 2;
-//                RequestPermission();
-//            }
-//        });
-//
-//        thirdProductImg.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                currentImg = 3;
-//                RequestPermission();
-//            }
-//        });
-//
-//        fourthProductImg.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                currentImg = 4;
-//                RequestPermission();
-//            }
-//        });
 
         cancelBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -226,23 +208,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
-        // allow TextInputEditText to scroll
-//        productDesc.setOnTouchListener(new View.OnTouchListener() {
-//
-//            public boolean onTouch(View v, MotionEvent event) {
-//                if (productDesc.hasFocus()) {
-//                    v.getParent().requestDisallowInterceptTouchEvent(true);
-//                    switch (event.getAction() & MotionEvent.ACTION_MASK) {
-//                        case MotionEvent.ACTION_SCROLL:
-//                            v.getParent().requestDisallowInterceptTouchEvent(false);
-//                            return true;
-//                    }
-//                }
-//                return false;
-//            }
-//        });
-
-        // get 90% of the windows size
         int width = (int) (getResources().getDisplayMetrics().widthPixels * 0.90);
 
         // set dialog size
@@ -263,23 +228,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         switch (requestCode) {
             case EXTERNAL_STORAGE_RC:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    switch (currentImg) {
-                        case 0:
-                            OpenMainGallery();
-                            break;
-//                        case 1:
-//                            OpenFirstGallery();
-//                            break;
-//                        case 2:
-//                            OpenSecondGallery();
-//                            break;
-//                        case 3:
-//                            OpenThirdGallery();
-//                            break;
-//                        case 4:
-//                            OpenFourthGallery();
-//                            break;
-                    }
+                    OpenMainGallery();
                 } else {
                     Toast.makeText(MainActivity.this,
                             getString(R.string.external_storage_permission_denied), Toast.LENGTH_SHORT).show();
@@ -294,77 +243,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         startActivityForResult(galleryIntent, MAIN_GALLERY_RC);
     }
 
-//    private void OpenFirstGallery() {
-//        Intent galleryIntent = new Intent(Intent.ACTION_GET_CONTENT);
-//        galleryIntent.setType("image/*");
-//        startActivityForResult(galleryIntent, FIRST_GALLERY_RC);
-//    }
-//
-//    private void OpenSecondGallery() {
-//        Intent galleryIntent = new Intent(Intent.ACTION_GET_CONTENT);
-//        galleryIntent.setType("image/*");
-//        startActivityForResult(galleryIntent, SECOND_GALLERY_RC);
-//    }
-//
-//    private void OpenThirdGallery() {
-//        Intent galleryIntent = new Intent(Intent.ACTION_GET_CONTENT);
-//        galleryIntent.setType("image/*");
-//        startActivityForResult(galleryIntent, THIRD_GALLERY_RC);
-//    }
-//
-//    private void OpenFourthGallery() {
-//        Intent galleryIntent = new Intent(Intent.ACTION_GET_CONTENT);
-//        galleryIntent.setType("image/*");
-//        startActivityForResult(galleryIntent, FOURTH_GALLERY_RC);
-//    }
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (resultCode == RESULT_OK && data != null) {
-            switch (requestCode) {
-                case MAIN_GALLERY_RC:
-                    // get image
-                    mainPickedImgUri = data.getData();
+        if (resultCode == RESULT_OK && requestCode == MAIN_GALLERY_RC && data != null) {
+            // get image
+            mainPickedImgUri = data.getData();
 
-                    // set image to ImageView
-                    mainProductImg.setImageURI(mainPickedImgUri);
+            // set image to ImageView
+            mainProductImg.setImageURI(mainPickedImgUri);
 
-                    break;
-                case FIRST_GALLERY_RC:
-                    // get image
-                    firstPickedImgUri = data.getData();
-
-                    // set image to ImageView
-                    firstProductImg.setImageURI(firstPickedImgUri);
-
-                    break;
-                case SECOND_GALLERY_RC:
-                    // get image
-                    secondPickedImgUri = data.getData();
-
-                    // set image to ImageView
-                    secondProductImg.setImageURI(secondPickedImgUri);
-
-                    break;
-                case THIRD_GALLERY_RC:
-                    // get image
-                    thirdPickedImgUri = data.getData();
-
-                    // set image to ImageView
-                    thirdProductImg.setImageURI(thirdPickedImgUri);
-
-                    break;
-                case FOURTH_GALLERY_RC:
-                    // get image
-                    fourthPickedImgUri = data.getData();
-
-                    // set image to ImageView
-                    fourthProductImg.setImageURI(fourthPickedImgUri);
-
-                    break;
-            }
         }
     }
 
@@ -408,86 +297,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         StorageReference productCategoryRef = storageRef.child(productCategory);
         StorageReference productImg = productCategoryRef.child(mainPickedImgUri.getLastPathSegment());
-
-//        if (firstPickedImgUri != null) {
-//            productImg.putFile(firstPickedImgUri)
-//                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-//                        @Override
-//                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-//                            productImg.getDownloadUrl()
-//                                    .addOnSuccessListener(new OnSuccessListener<Uri>() {
-//                                        @Override
-//                                        public void onSuccess(Uri uri) {
-//                                            ProductInfos productInfos = new ProductInfos();
-//                                            productInfos.setProductFirstImgLink(uri.toString());
-//                                            Log.d("image f", "image add");
-//                                            Log.d("image f", ""+uri.toString());
-//                                        }
-//                                    })
-//                                    .addOnFailureListener(new OnFailureListener() {
-//                                        @Override
-//                                        public void onFailure(@NonNull Exception e) {
-//                                            Toast.makeText(MainActivity.this, "Image" +
-//                                                    " link not add to database", Toast.LENGTH_SHORT).show();
-//                                        }
-//                                    });
-//                        }
-//                    })
-//                    .addOnFailureListener(new OnFailureListener() {
-//                        @Override
-//                        public void onFailure(@NonNull Exception e) {
-//                            Toast.makeText(MainActivity.this, "Image not add", Toast.LENGTH_SHORT).show();
-//                        }
-//                    });
-//        }
-//
-//        if (secondPickedImgUri != null) {
-//            productImg.putFile(secondPickedImgUri)
-//                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-//                        @Override
-//                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-//                            Toast.makeText(MainActivity.this, "Image add", Toast.LENGTH_SHORT).show();
-//                        }
-//                    })
-//                    .addOnFailureListener(new OnFailureListener() {
-//                        @Override
-//                        public void onFailure(@NonNull Exception e) {
-//                            Toast.makeText(MainActivity.this, "Image not add", Toast.LENGTH_SHORT).show();
-//                        }
-//                    });
-//        }
-//
-//        if (thirdPickedImgUri != null) {
-//            productImg.putFile(thirdPickedImgUri)
-//                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-//                        @Override
-//                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-//                            Toast.makeText(MainActivity.this, "Image add", Toast.LENGTH_SHORT).show();
-//                        }
-//                    })
-//                    .addOnFailureListener(new OnFailureListener() {
-//                        @Override
-//                        public void onFailure(@NonNull Exception e) {
-//                            Toast.makeText(MainActivity.this, "Image not add", Toast.LENGTH_SHORT).show();
-//                        }
-//                    });
-//        }
-//
-//        if (fourthPickedImgUri != null) {
-//            productImg.putFile(fourthPickedImgUri)
-//                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-//                        @Override
-//                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-//                            Toast.makeText(MainActivity.this, "Image add", Toast.LENGTH_SHORT).show();
-//                        }
-//                    })
-//                    .addOnFailureListener(new OnFailureListener() {
-//                        @Override
-//                        public void onFailure(@NonNull Exception e) {
-//                            Toast.makeText(MainActivity.this, "Image not add", Toast.LENGTH_SHORT).show();
-//                        }
-//                    });
-//        }
 
         if (mainPickedImgUri != null) {
             productImg.putFile(mainPickedImgUri)
@@ -539,15 +348,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                         // clear fields value
                         mainPickedImgUri = null;
-                        firstPickedImgUri = null;
-                        secondPickedImgUri = null;
-                        thirdPickedImgUri = null;
-                        fourthPickedImgUri = null;
                         mainProductImg.setImageURI(null);
-//                        firstProductImg.setImageURI(null);
-//                        secondProductImg.setImageURI(null);
-//                        thirdProductImg.setImageURI(null);
-//                        fourthProductImg.setImageURI(null);
                         productName.getText().clear();
                         productDesc.getText().clear();
                         productPrice.getText().clear();
@@ -627,8 +428,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 break;
 
             case R.id.log_out:
-                Intent logOut = new Intent(MainActivity.this, LogOut.class);
-                startActivity(logOut);
+                ShowLogOutDialog();
                 break;
         }
 
@@ -636,5 +436,36 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         drawer.closeDrawer(GravityCompat.START);
 
         return true;
+    }
+
+    private void ShowLogOutDialog() {
+        // create dialog
+        AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
+        dialog.setTitle("Do you want to log out?");
+        dialog.setCancelable(false);
+
+        dialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // dismiss dialog
+                dialog.dismiss();
+            }
+        });
+
+        dialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // log out user
+                mAuth.signOut();
+
+                // redirect user to log in page
+                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
+
+        // show dialog
+        dialog.show();
     }
 }

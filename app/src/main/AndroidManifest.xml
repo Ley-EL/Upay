@@ -21,15 +21,17 @@
         <activity android:name=".extra.stepper.Stepper_three_Activity" />
         <activity android:name=".extra.stepper.Stepper_two_Activity" />
         <activity android:name=".extra.stepper.Stepper_one_Activity" />
-        <activity android:name=".UserConnections.LoginActivity" />
-        <activity android:name=".UserConnections.RegisterActivity" />
-        <activity android:name=".MainActivity">
+        <activity android:name=".UserConnections.LoginActivity" >
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
+        <activity android:name=".UserConnections.RegisterActivity" />
+        <activity android:name=".MainActivity"/>
     </application>
 
 </manifest>
