@@ -12,26 +12,17 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Upay">
-        <activity
-            android:name=".Models.ProductsDetailsModel"/>
-        <activity
-            android:name=".WishList"
-            android:parentActivityName=".MainActivity" />
-        <activity android:name=".UserConnections.LogOut" />
-        <activity android:name=".extra.stepper.Stepper_three_Activity" />
-        <activity android:name=".extra.stepper.Stepper_two_Activity" />
-        <activity android:name=".extra.stepper.Stepper_one_Activity" />
-        <activity android:name=".UserConnections.LoginActivity" >
-
+        <activity android:name=".SplashScreenActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
+        <activity android:name=".Models.ProductsDetailsModel" />
+        <activity android:name=".UserConnections.LoginActivity"/>
         <activity android:name=".UserConnections.RegisterActivity" />
-        <activity android:name=".MainActivity"/>
+        <activity android:name=".MainActivity" />
     </application>
 
 </manifest>

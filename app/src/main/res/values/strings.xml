@@ -11,4 +11,11 @@
     <string name="min_password_length">You should enter at least 6 characters for the password section</string>
     <string name="password_different">Your password confirmation is different to your password</string>
     <string name="progress_dialog_login">Logging in...</string>
+    <string name="progress_dialog_product_loading">Products are loading...</string>
+    <string name="dialog_title_delete_product">Are you sure to delete this product?</string>
+    <string name="dialog_negative_btn">No</string>
+    <string name="dialog_positive_btn">Yes</string>
+    <string name="progress_dialog_product_deleting">Product are deleting...</string>
+    <string name="product_delete_successfully">Product delete successfully</string>
+    <string name="product_not_delete">Product not delete</string>
 </resources>

@@ -25,6 +25,7 @@
             android:layout_height="wrap_content"
             android:text="Login"
             android:textSize="30sp"
+            android:textColor="@color/orange_color"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.235"
@@ -39,6 +40,7 @@
             android:layout_height="wrap_content"
             android:text="Register"
             android:textSize="20sp"
+            android:textColor="@color/yellow_color"
             android:alpha="0.6"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -55,8 +57,7 @@
             android:hint="Email"
             android:layout_marginLeft="20dp"
             android:layout_marginRight="20dp"
-            android:textColor="#FED600"
-            android:textColorHint="#FED600"
+            android:textColorHint="@color/orange_color"
             android:inputType="textEmailAddress"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -66,17 +67,15 @@
             app:layout_constraintVertical_bias="0.408"
             tools:ignore="MissingConstraints" />
 
-
         <EditText
             android:id="@+id/input_password_login"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
             android:layout_marginRight="20dp"
-            android:hint="Email"
-            android:inputType="textEmailAddress"
-            android:textColor="#FED600"
-            android:textColorHint="#FED600"
+            android:hint="Password"
+            android:inputType="textPassword"
+            android:textColorHint="@color/orange_color"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.4"
@@ -93,7 +92,7 @@
             android:drawableRight="@drawable/ic_login"
             android:elevation="10dp"
             android:text="LOG IN"
-            android:textColor="#FED600"
+            android:textColor="@color/orange_color"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.52"
@@ -105,17 +104,16 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Forgot password, Recover ?"
-            android:textColor="#FED600"
+            android:text="Forgot password? Recover"
+            android:textColor="@color/orange_color"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            android:textSize="18sp"
             app:layout_constraintHorizontal_bias="0.498"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.923" />
 
-
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

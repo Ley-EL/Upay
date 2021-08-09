@@ -9,6 +9,8 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,6 +30,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
 
 import com.example.upay.Fragments.BooksFragment;
 import com.example.upay.Fragments.ClothesFragment;
@@ -37,6 +40,7 @@ import com.example.upay.Fragments.ShoesFragment;
 import com.example.upay.Fragments.StreamingFragment;
 import com.example.upay.Fragments.TopFragment;
 import com.example.upay.Models.ProductInfos;
+import com.example.upay.Models.User;
 import com.example.upay.UserConnections.LoginActivity;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -46,8 +50,12 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -58,10 +66,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private Spinner spinner;
     private ImageView mainProductImg;
     private TextInputLayout productNameLayout, productDescLayout, productPriceLayout;
+    private TextInputLayout nameLayout, numberLayout, addressLayout;
     private TextInputEditText productName, productDesc, productPrice;
+    private TextInputEditText name, number, address;
     private String productNameVal, productDescVal, productPriceVal, productCategory;
+    private String nameVal, numberVal, addressVal;
     private ProgressDialog progressDialog;
-    private Dialog dialog;
+    private Dialog dialog, retrieveContactInfoDialog;
     private Uri mainPickedImgUri;
     private final int EXTERNAL_STORAGE_RC = 1;
     private final int MAIN_GALLERY_RC = 0;
@@ -71,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
     private FirebaseDatabase database;
-    private DatabaseReference databaseRef;
+    private DatabaseReference databaseRef, userRef;
     private FirebaseStorage storage;
     private StorageReference storageRef;
 
@@ -95,7 +106,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // retrieve all id
         drawer = findViewById(R.id.drawer);
-        navigationView = findViewById(R.id.navigation_view);// retrieve all id
+        navigationView = findViewById(R.id.navigation_view);
         addProduct = findViewById(R.id.add_product);
 
         // initialize progress dialog
@@ -113,8 +124,38 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         currentUser = mAuth.getCurrentUser();
         database = FirebaseDatabase.getInstance();
         databaseRef = database.getReference().child("Product");
+        userRef = database.getReference("Users");
         storage = FirebaseStorage.getInstance();
         storageRef = storage.getReference().child("Product Image");
+
+        if (currentUser.getDisplayName().equals("Upay") && currentUser.getEmail().equals("upay@gmail.com")) {
+            Query query = userRef.orderByChild("name").equalTo("Upay");
+
+            query.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+                        User user = dataSnapshot.getValue(User.class);
+
+                        // if contact info isn't already set yet
+                        if (user.getInfoAddress() == null) {
+                            ShowRetrieveContactInfoDialog();
+                        }
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
+        }
+
+        /* show floating action button only if user is an Admin (have Upay as username and the
+            specific email associate with Upay */
+        if (currentUser.getDisplayName().equals("Upay") && currentUser.getEmail().equals("upay@gmail.com")) {
+            addProduct.setVisibility(View.VISIBLE);
+        }
 
         // draw button for navigation view
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(MainActivity.this, drawer,
@@ -132,6 +173,118 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
         UpdateNavHeader();
+    }
+
+    private void ShowRetrieveContactInfoDialog() {
+        // create dialog
+        retrieveContactInfoDialog = new Dialog(MainActivity.this);
+        retrieveContactInfoDialog.setContentView(R.layout.custom_dialog_retrieve_contact_info);
+        retrieveContactInfoDialog.setCanceledOnTouchOutside(false);
+        retrieveContactInfoDialog.setCancelable(false);
+
+        // retrieve all id
+        nameLayout = retrieveContactInfoDialog.findViewById(R.id.name_layout);
+        numberLayout = retrieveContactInfoDialog.findViewById(R.id.number_layout);
+        addressLayout = retrieveContactInfoDialog.findViewById(R.id.address_layout);
+        name = retrieveContactInfoDialog.findViewById(R.id.name);
+        number = retrieveContactInfoDialog.findViewById(R.id.number);
+        address = retrieveContactInfoDialog.findViewById(R.id.address);
+        Button addBtn = retrieveContactInfoDialog.findViewById(R.id.add_btn);
+
+        addBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ValidateContactInfoFields();
+            }
+        });
+
+        // show dialog
+        retrieveContactInfoDialog.show();
+    }
+
+    private void ValidateContactInfoFields() {
+        // get value from TextInputEditText
+        nameVal = name.getText().toString().trim();
+        numberVal = number.getText().toString().trim();
+        addressVal = address.getText().toString().trim();
+
+        if (nameVal.isEmpty()) {
+            nameLayout.setError(getString(R.string.fill_in_field));
+        } else {
+            nameLayout.setError(null);
+        }
+
+        if (numberVal.isEmpty()) {
+            numberLayout.setError(getString(R.string.fill_in_field));
+        } else {
+            numberLayout.setError(null);
+        }
+
+        if (addressVal.isEmpty()) {
+            addressLayout.setError(getString(R.string.fill_in_field));
+        } else {
+            addressLayout.setError(null);
+        }
+
+        if (nameLayout.getError() == null && numberLayout.getError() == null &&
+                addressLayout.getError() == null) {
+            SaveContactInfo();
+        }
+    }
+
+    private void SaveContactInfo() {
+        // set progress dialog message
+        progressDialog.setMessage("Profile is updating...");
+
+        // show progress dialog
+        progressDialog.show();
+
+        // add value to db
+        User user = new User("Upay");
+        user.setInfoName(nameVal);
+        user.setInfoNumber(numberVal);
+        user.setInfoAddress(addressVal);
+
+        Query query = userRef.orderByChild("name").equalTo("Upay");
+
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+                    DatabaseReference upayRef = userRef.child(dataSnapshot.getKey());
+
+                    upayRef.setValue(user)
+                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+                                    // dismiss progress dialog
+                                    progressDialog.dismiss();
+
+                                    // dismiss dialog
+                                    retrieveContactInfoDialog.dismiss();
+
+                                    Toast.makeText(MainActivity.this, "Profile Updated",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            })
+                            .addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    // dismiss progress dialog
+                                    progressDialog.dismiss();
+
+                                    Toast.makeText(MainActivity.this, "Profile not updated",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
     }
 
     public void UpdateNavHeader() {
@@ -209,9 +362,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
         int width = (int) (getResources().getDisplayMetrics().widthPixels * 0.90);
+        int height = (int) (getResources().getDisplayMetrics().heightPixels * 0.97);
 
         // set dialog size
-        dialog.getWindow().setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
+        dialog.getWindow().setLayout(width, height);
 
         // show dialog
         dialog.show();
@@ -308,8 +462,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         @Override
                                         public void onSuccess(Uri uri) {
                                             ProductInfos productInfos = new ProductInfos(productNameVal,
-                                                    productDescVal, productPriceVal);
-                                            productInfos.setProductImgLink(uri.toString());
+                                                    productDescVal, productPriceVal, uri.toString(),
+                                                    uri.getLastPathSegment());
                                             AddProductInfos(productInfos);
                                         }
                                     })
@@ -422,11 +576,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         new StreamingFragment()).commit();
                 break;
 
-            case R.id.wishlist:
-                Intent wishlist = new Intent(MainActivity.this, WishList.class);
-                startActivity(wishlist);
-                break;
-
             case R.id.log_out:
                 ShowLogOutDialog();
                 break;
@@ -440,7 +589,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void ShowLogOutDialog() {
         // create dialog
-        AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
+        AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialogTheme);
         dialog.setTitle("Do you want to log out?");
         dialog.setCancelable(false);
 

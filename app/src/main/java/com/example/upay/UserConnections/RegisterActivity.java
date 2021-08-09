@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.upay.MainActivity;
+import com.example.upay.Models.User;
 import com.example.upay.R;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -21,6 +22,8 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -31,6 +34,8 @@ public class RegisterActivity extends AppCompatActivity {
 
     ProgressDialog progressDialog;
 
+    private FirebaseDatabase database;
+    private DatabaseReference databaseRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +52,10 @@ public class RegisterActivity extends AppCompatActivity {
 
         // initialize progress dialog
         progressDialog = new ProgressDialog(this);
+
+        // initialize firebase variable
+        database = FirebaseDatabase.getInstance();
+        databaseRef = database.getReference("Users");
 
         // set progress dialog msg
         progressDialog.setMessage(getString(R.string.progress_dialog_register));
@@ -120,8 +129,8 @@ public class RegisterActivity extends AppCompatActivity {
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
+                        progressDialog.dismiss();
                         if (task.isSuccessful()) {
-                            progressDialog.dismiss();
 
                             UserProfileChangeRequest profileUpdate = new UserProfileChangeRequest.Builder()
                                     .setDisplayName(name)
@@ -131,10 +140,33 @@ public class RegisterActivity extends AppCompatActivity {
                                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                                         @Override
                                         public void onSuccess(Void aVoid) {
-                                            // dismiss progress dialog
-                                            progressDialog.dismiss();
 
-                                            UpdateUI();
+                                            // add user name to db
+                                            User user = new User(name);
+
+                                            DatabaseReference userRef = databaseRef.push();
+
+                                            userRef.setValue(user)
+                                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                        @Override
+                                                        public void onSuccess(Void aVoid) {
+                                                            // dismiss progress dialog
+                                                            progressDialog.dismiss();
+
+                                                            UpdateUI();
+                                                        }
+                                                    })
+                                                    .addOnFailureListener(new OnFailureListener() {
+                                                        @Override
+                                                        public void onFailure(@NonNull Exception e) {
+                                                            // dismiss progress dialog
+                                                            progressDialog.dismiss();
+
+                                                            Toast.makeText(RegisterActivity.this,
+                                                                    "Something wrong: " + e.getMessage(),
+                                                                    Toast.LENGTH_SHORT).show();
+                                                        }
+                                                    });
                                         }
                                     })
                                     .addOnFailureListener(new OnFailureListener() {
@@ -150,7 +182,6 @@ public class RegisterActivity extends AppCompatActivity {
                                     });
                         } else {
                             // dismiss progress dialog
-                            progressDialog.dismiss();
 
                             // If sign in fails, display a message to the user.
                             Toast.makeText(RegisterActivity.this, "Authentication failed.",

@@ -17,29 +17,33 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.upay.Models.ProductInfos;
 import com.example.upay.R;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
 
 public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ProductsAdapterViewHolder> {
 
-    private onItemClickListener mListener;
+    private onItemClickListener itemListener;
+    private onClickListener clickListener;
 
     private ArrayList<ProductInfos> productsList = new ArrayList<>();
     private Context context;
+    private FirebaseAuth mAuth;
+    private FirebaseUser currentUser;
 
     public ProductsAdapter(ArrayList<ProductInfos> productsList, Context context) {
         this.productsList = productsList;
         this.context = context;
     }
 
-
-
     public static class ProductsAdapterViewHolder extends RecyclerView.ViewHolder {
 
         ImageView productImg, productOptions;
         TextView productName, productPrice;
 
-        public ProductsAdapterViewHolder(@NonNull View itemView, onItemClickListener listener) {
+        public ProductsAdapterViewHolder(@NonNull View itemView, onItemClickListener itemListener,
+                                         onClickListener clickListener, FirebaseUser currentUser) {
             super(itemView);
 
             // retrieve all id
@@ -48,20 +52,29 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.Produc
             productName = itemView.findViewById(com.example.upay.R.id.product_name);
             productPrice = itemView.findViewById(com.example.upay.R.id.product_price);
 
-            productOptions.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-
-                }
-            });
+            if (currentUser.getDisplayName().equals("Upay") && currentUser.getEmail().equals("upay@gmail.com")) {
+                productOptions.setVisibility(View.VISIBLE);
+            }
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (listener != null) {
+                    if (itemListener != null) {
                         int position = getAdapterPosition();
                         if (position != RecyclerView.NO_POSITION) {
-                            listener.onItemClick(position);
+                            itemListener.onItemClick(position);
+                        }
+                    }
+                }
+            });
+
+            productOptions.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (clickListener != null) {
+                        int position = getAdapterPosition();
+                        if (position != RecyclerView.NO_POSITION) {
+                            clickListener.onClick(productOptions, position);
                         }
                     }
                 }
@@ -69,15 +82,17 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.Produc
         }
     }
 
-
-
     @NonNull
     @Override
     public ProductsAdapterViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(context).inflate(com.example.upay.R.layout.product_item_model,
                 parent, false);
 
-        return new ProductsAdapterViewHolder(view, mListener);
+        // initialize firebase variable
+        mAuth = FirebaseAuth.getInstance();
+        currentUser = mAuth.getCurrentUser();
+
+        return new ProductsAdapterViewHolder(view, itemListener, clickListener, currentUser);
     }
 
     @Override
@@ -93,7 +108,6 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.Produc
 
         // set product price
         holder.productPrice.setText(currentProduct.getProductPrice());
-
     }
 
     @Override
@@ -106,6 +120,14 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.Produc
     }
 
     public void setOnItemClickListener(onItemClickListener listener) {
-        mListener = listener;
+        itemListener = listener;
+    }
+
+    public interface onClickListener {
+        void onClick(View view, int position);
+    }
+
+    public void setOnClickListener(onClickListener listener) {
+        clickListener = listener;
     }
 }

@@ -1,5 +1,6 @@
 package com.example.upay.Models;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
@@ -17,14 +18,22 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.example.upay.R;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
 public class ProductsDetailsModel extends AppCompatActivity {
 
-    private TextView productNameTV, productPriceTV, productDescContent;
+    private TextView productNameTV, productPriceTV, productDescContent, infoName, infoNumber, infoAddress;
     private ImageView productMainImg, expandDescIcon, collapseDescIcon, expandInfoIcon, collapseInfoIcon;
-    private FloatingActionButton addProductImg;
     private ConstraintLayout productInfoContent;
     private String productImgLink, productName, productPrice, productDesc;
+
+    private FirebaseDatabase database;
+    private DatabaseReference userRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,16 +41,22 @@ public class ProductsDetailsModel extends AppCompatActivity {
         setContentView(R.layout.activity_products_details_model);
 
         // retrieve all id
-        addProductImg = findViewById(R.id.add_product_img);
         productNameTV = findViewById(R.id.product_name);
         productPriceTV = findViewById(R.id.product_price);
         productDescContent = findViewById(R.id.desc_content);
         productInfoContent = findViewById(R.id.info_content);
         productMainImg = findViewById(R.id.main_product_img);
+        infoName = findViewById(R.id.info_name);
+        infoNumber = findViewById(R.id.info_number);
+        infoAddress = findViewById(R.id.info_address);
         expandDescIcon = findViewById(R.id.expand_desc_icon);
         collapseDescIcon = findViewById(R.id.collapse_desc_icon);
         expandInfoIcon = findViewById(R.id.expand_info_icon);
         collapseInfoIcon = findViewById(R.id.collapse_info_icon);
+
+        // initialize firebase variable
+        database = FirebaseDatabase.getInstance();
+        userRef = database.getReference("Users");
 
         expandDescIcon.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -79,18 +94,7 @@ public class ProductsDetailsModel extends AppCompatActivity {
             }
         });
 
-        addProductImg.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ShowAddImgDialog();
-            }
-        });
-
         FillViewActivity();
-
-    }
-
-    private void ShowAddImgDialog() {
 
     }
 
@@ -114,6 +118,31 @@ public class ProductsDetailsModel extends AppCompatActivity {
         productDesc = getIntent().getExtras().get("product_description").toString();
         // set product description
         productDescContent.setText(productDesc);
+
+        Query query = userRef.orderByChild("name").equalTo("Upay");
+
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+                    User user = dataSnapshot.getValue(User.class);
+
+                    // set info name
+                    infoName.setText(user.getInfoName());
+
+                    // set info number
+                    infoNumber.setText(user.getInfoNumber());
+
+                    // set info address
+                    infoAddress.setText(user.getInfoAddress());
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
 
     }
 

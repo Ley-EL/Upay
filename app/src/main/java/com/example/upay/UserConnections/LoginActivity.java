@@ -49,6 +49,10 @@ public class LoginActivity extends AppCompatActivity {
         // set progress dialog message
         progressDialog.setMessage(getString(R.string.progress_dialog_login));
 
+        // set progress dialog not cancelable
+        progressDialog.setCancelable(false);
+        progressDialog.setCanceledOnTouchOutside(false);
+
         // initialize firebase variable
         mAuth = FirebaseAuth.getInstance();
 
